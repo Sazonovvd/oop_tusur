@@ -17,7 +17,7 @@ class Taxpayer {
 public:
     // Константа процента налога по умолчанию
     static constexpr double kDefaultTaxRate = 13.0;
-    
+
     // Конструктор с параметрами (ИНН и год расчета)
     Taxpayer(const char* const inn, const int& year);
     // Конструктор копирования (нужен, т.к. владеем динамической памятью)
@@ -99,4 +99,4 @@ private:
     void freeInn();
 };
 
-#endif // TAXPAYER_H
+#endif
