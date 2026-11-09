@@ -12,8 +12,11 @@ void TaxPayer::validateInn(const char* inn) const {
     if (len == 0) {
         throw std::invalid_argument("ИНН не может быть пустым");
     }
-    if (len != 10 && len != 12) {
-        throw std::invalid_argument("Длина ИНН должна быть 10 или 12 символов");
+    if (len != innLengtLegalEntity && len != innLengthIndividual) {
+        throw std::invalid_argument(
+            "Длина ИНН должна быть " + std::to_string(innLengtLegalEntity) + 
+            " или " + std::to_string(innLengthIndividual) + " символов"
+        );
     }
     for (size_t i = 0; i < len; ++i) {
         if (!std::isdigit(static_cast<unsigned char>(inn[i]))) {
@@ -24,8 +27,11 @@ void TaxPayer::validateInn(const char* inn) const {
 
 // Проверка корректности года
 void TaxPayer::validateYear(int year) const {
-    if (year < 2000 || year > 2100) {
-        throw std::invalid_argument("Год расчёта должен быть в диапазоне от 2000 до 2100");
+    if (year < minYear || year > maxYear) {
+        throw std::invalid_argument(
+            "Год расчёта должен быть в диапазоне от " + std::to_string(minYear) + 
+            " до " + std::to_string(maxYear)
+        );
     }
 }
 
@@ -37,7 +43,7 @@ TaxPayer::TaxPayer(const char* inn, int year)
       nonTaxableIncome_(0.0),
       totalTax_(0.0),
       totalIncome_(0.0),
-      taxRate_(13.0) {
+      taxRate_(defaultTaxRate) {
     validateInn(inn);
     validateYear(year);
     inn_ = new char[std::strlen(inn) + 1];
@@ -78,7 +84,9 @@ TaxPayer::~TaxPayer() {
 }
 
 // Селекторы
-const char* TaxPayer::getInn() const { return inn_; }
+const char* TaxPayer::getInn() const { 
+    return inn_; 
+}
 int TaxPayer::getYear() const { return year_; }
 double TaxPayer::getTaxableIncome() const { return taxableIncome_; }
 double TaxPayer::getNonTaxableIncome() const { return nonTaxableIncome_; }
@@ -88,8 +96,11 @@ double TaxPayer::getTaxRate() const { return taxRate_; }
 
 // Установка процента налога с проверкой
 void TaxPayer::setTaxRate(double rate) {
-    if (rate <= 0.0 || rate > 100.0) {
-        throw std::invalid_argument("Процент налога должен быть больше 0 и не более 100");
+    if (rate <= minTaxRate || rate > maxTaxRate) {
+        throw std::invalid_argument(
+            "Процент налога должен быть больше" + std::to_string(minTaxRate) + 
+            " и не более " + std::to_string(maxTaxRate)
+        );
     }
     taxRate_ = rate;
 }
@@ -101,7 +112,7 @@ void TaxPayer::addIncome(double amount, bool isTaxable) {
     }
     if (isTaxable) {
         taxableIncome_ += amount;
-        totalTax_ += amount * taxRate_ / 100.0;
+        totalTax_ += amount * taxRate_ / maxTaxRate;
     } else {
         nonTaxableIncome_ += amount;
     }

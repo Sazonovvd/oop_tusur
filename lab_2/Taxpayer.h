@@ -5,18 +5,28 @@
 
 class TaxPayer {
 private:
+    static constexpr int    innLengtLegalEntity  = 10;   // Длина ИНН юр. лица
+    static constexpr int    innLengthIndividual   = 12;   // Длина ИНН физ. лица
+    static constexpr int    minYear               = 2000; // Минимальный год с которого инн считаем
+    static constexpr int    maxYear               = 2100; // Максимальный год с которого инн считаем
+    static constexpr double defaultTaxRate        = 13.0; // Процент подоходного налога
+    static constexpr double minTaxRate            = 0.0;
+    static constexpr double maxTaxRate            = 100.0;
+
     char* inn_;                 // ИНН (динамическая строка)
     int year_;                  // год расчёта
     double taxableIncome_;      // налогооблагаемый доход
     double nonTaxableIncome_;   // неналогооблагаемый доход
     double totalTax_;           // итог суммы подоходного налога
     double totalIncome_;        // итог суммы доходов
-    double taxRate_;            // процент подоходного налога (по умолчанию 13)
+    double taxRate_;            // процент подоходного налога
 
     void validateInn(const char* inn) const;
     void validateYear(int year) const;
 
 public:
+    
+
     // Конструктор с параметрами
     TaxPayer(const char* inn, int year);
 
