@@ -119,6 +119,21 @@ void TaxPayer::addIncome(double amount, bool isTaxable) {
     totalIncome_ += amount;
 }
 
+// перегрузка оператора>>
+std::istream& operator>>(std::istream& in, TaxPayer& obj) {
+    double netIncome = 0.0;
+    if (in >> netIncome) {
+        obj.addIncome(netIncome);   // вызывает версию с одним параметром
+    }
+    return in;
+}
+
+// перегрузка оператора+=
+double& operator+=(double& sum, const TaxPayer& obj) {
+    sum += obj.getTotalTax();
+    return sum;
+}
+
 // Вывод всех параметров
 void TaxPayer::print() const {
     std::cout << "ИНН: " << inn_ << std::endl;

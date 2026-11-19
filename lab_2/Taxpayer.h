@@ -25,7 +25,10 @@ private:
     void validateYear(int year) const;
 
 public:
-    
+    // перегрузка конструктора 
+    TaxPayer(const char* inn, int year,
+             double taxableIncome    = 0.0,
+             double nonTaxableIncome = 0.0);
 
     // Конструктор с параметрами
     TaxPayer(const char* inn, int year);
@@ -56,6 +59,13 @@ public:
 
     // Вывод всех параметров на консоль
     void print() const;
-};
+}; 
+// перегрузка operator>>
+// >> читает сумму налога
+std::istream& operator>>(std::istream& in, TaxPayer& obj);
+
+// перегрузка operator+=
+// += накапливает сумму налога
+double& operator+=(double& sum, const TaxPayer& obj);
 
 #endif // TAXPAYER_H
