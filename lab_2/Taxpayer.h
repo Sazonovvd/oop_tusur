@@ -5,7 +5,7 @@
 
 class TaxPayer {
 private:
-    static constexpr int    innLengtLegalEntity  = 10;   // Длина ИНН юр. лица
+    static constexpr int    innLengthLegalEntity  = 10;   // Длина ИНН юр. лица
     static constexpr int    innLengthIndividual   = 12;   // Длина ИНН физ. лица
     static constexpr int    minYear               = 2000; // Минимальный год с которого инн считаем
     static constexpr int    maxYear               = 2100; // Максимальный год с которого инн считаем
@@ -25,13 +25,8 @@ private:
     void validateYear(int year) const;
 
 public:
-    // перегрузка конструктора 
-    TaxPayer(const char* inn, int year,
-             double taxableIncome    = 0.0,
-             double nonTaxableIncome = 0.0);
-
-    // Конструктор с параметрами
-    TaxPayer(const char* inn, int year);
+    // Перегрузка конструктора: параметры по умолчанию покрывают требования и Лабы 2, и Лабы 3
+    TaxPayer(const char* inn, int year, double taxableIncome = 0.0, double nonTaxableIncome = 0.0);
 
     // Конструктор копирования и оператор присваивания (для безопасной работы с динамической памятью)
     TaxPayer(const TaxPayer& other);
@@ -57,15 +52,19 @@ public:
     // isTaxable = false — доход не облагается налогом
     void addIncome(double amount, bool isTaxable);
 
+    // LAB_3: Добавление дохода ПОСЛЕ вычета налога (обратный расчет)
+    void addIncomeAfterTax(double netAmount);
+
     // Вывод всех параметров на консоль
     void print() const;
 }; 
-// перегрузка operator>>
-// >> читает сумму налога
+
+// LAB_3: перегрузка operator>>
+// >> читает сумму дохода "на руки" и добавляет её с обратным расчетом
 std::istream& operator>>(std::istream& in, TaxPayer& obj);
 
-// перегрузка operator+=
-// += накапливает сумму налога
-double& operator+=(double& sum, const TaxPayer& obj);
+// LAB_3: перегрузка operator+= вне класса
+// += накапливает сумму налога от всех налогоплательщиков
+double& operator+=(double& sum, const TaxPayer& obj); //
 
 #endif // TAXPAYER_H

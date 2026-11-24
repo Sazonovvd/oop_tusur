@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cctype>
 #include <stdexcept>
+#include <string>
 
 // Проверка корректности ИНН
 void TaxPayer::validateInn(const char* inn) const {
@@ -12,9 +13,9 @@ void TaxPayer::validateInn(const char* inn) const {
     if (len == 0) {
         throw std::invalid_argument("ИНН не может быть пустым");
     }
-    if (len != innLengtLegalEntity && len != innLengthIndividual) {
+    if (len != innLengthLegalEntity && len != innLengthIndividual) {
         throw std::invalid_argument(
-            "Длина ИНН должна быть " + std::to_string(innLengtLegalEntity) + 
+            "Длина ИНН должна быть " + std::to_string(innLengthLegalEntity) + 
             " или " + std::to_string(innLengthIndividual) + " символов"
         );
     }
@@ -35,8 +36,8 @@ void TaxPayer::validateYear(int year) const {
     }
 }
 
-// Конструктор с параметрами
-TaxPayer::TaxPayer(const char* inn, int year)
+// Конструктор с параметрами (и параметрами по умолчанию для Лабы 3)
+TaxPayer::TaxPayer(const char* inn, int year, double taxableIncome, double nonTaxableIncome)
     : inn_(nullptr),
       year_(year),
       taxableIncome_(0.0),
@@ -48,6 +49,14 @@ TaxPayer::TaxPayer(const char* inn, int year)
     validateYear(year);
     inn_ = new char[std::strlen(inn) + 1];
     std::strcpy(inn_, inn);
+    
+    // Используем существующий метод для корректного расчета налогов при инициализации
+    if (taxableIncome > 0.0) {
+        addIncome(taxableIncome, true);
+    }
+    if (nonTaxableIncome > 0.0) {
+        addIncome(nonTaxableIncome, false);
+    }
 }
 
 // Конструктор копирования
@@ -68,6 +77,7 @@ TaxPayer& TaxPayer::operator=(const TaxPayer& other) {
         delete[] inn_;
         inn_ = new char[std::strlen(other.inn_) + 1];
         std::strcpy(inn_, other.inn_);
+        
         year_ = other.year_;
         taxableIncome_ = other.taxableIncome_;
         nonTaxableIncome_ = other.nonTaxableIncome_;
@@ -84,9 +94,7 @@ TaxPayer::~TaxPayer() {
 }
 
 // Селекторы
-const char* TaxPayer::getInn() const { 
-    return inn_; 
-}
+const char* TaxPayer::getInn() const { return inn_; }
 int TaxPayer::getYear() const { return year_; }
 double TaxPayer::getTaxableIncome() const { return taxableIncome_; }
 double TaxPayer::getNonTaxableIncome() const { return nonTaxableIncome_; }
@@ -98,37 +106,55 @@ double TaxPayer::getTaxRate() const { return taxRate_; }
 void TaxPayer::setTaxRate(double rate) {
     if (rate <= minTaxRate || rate > maxTaxRate) {
         throw std::invalid_argument(
-            "Процент налога должен быть больше" + std::to_string(minTaxRate) + 
+            "Процент налога должен быть больше " + std::to_string(minTaxRate) + 
             " и не более " + std::to_string(maxTaxRate)
         );
     }
     taxRate_ = rate;
 }
 
-// Добавление дохода
+// Добавление дохода (до вычета налога)
 void TaxPayer::addIncome(double amount, bool isTaxable) {
     if (amount <= 0.0) {
         throw std::invalid_argument("Доход должен быть положительным");
     }
     if (isTaxable) {
         taxableIncome_ += amount;
-        totalTax_ += amount * taxRate_ / maxTaxRate;
+        totalTax_ += amount * (taxRate_ / maxTaxRate); // Используем константу maxTaxRate (100.0)
     } else {
         nonTaxableIncome_ += amount;
     }
     totalIncome_ += amount;
 }
 
-// перегрузка оператора>>
+// LAB_3: Доход ПОСЛЕ вычета налога (обратный расчет)
+void TaxPayer::addIncomeAfterTax(double netAmount) { //
+    if (netAmount <= minTaxRate) {
+        throw std::invalid_argument("Сумма 'на руки' должна быть положительной");
+    }
+    double multiplier = 1.0 - (taxRate_ / maxTaxRate);
+    if (multiplier <= 0.0) {
+        throw std::logic_error("Невозможно рассчитать доход при ставке налога 100% или более");
+    }
+    
+    double grossAmount = netAmount / multiplier; // "Грязный" доход
+    double taxPaid = grossAmount - netAmount;    // Уплаченный налог
+
+    taxableIncome_ += grossAmount;
+    totalTax_ += taxPaid;
+    totalIncome_ += grossAmount;
+}
+
+// LAB_3: перегрузка оператора >>
 std::istream& operator>>(std::istream& in, TaxPayer& obj) {
     double netIncome = 0.0;
     if (in >> netIncome) {
-        obj.addIncome(netIncome);   // вызывает версию с одним параметром
+        obj.addIncomeAfterTax(netIncome); // Вызываем метод с обратным расчетом
     }
     return in;
 }
 
-// перегрузка оператора+=
+// LAB_3: перегрузка оператора += вне класса
 double& operator+=(double& sum, const TaxPayer& obj) {
     sum += obj.getTotalTax();
     return sum;
